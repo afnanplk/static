@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Static Prefix Adder</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: #1c1c1c;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 15px rgba(0, 255, 255, 0.5);
+            border: 2px solid #00ffff;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #00ffff;
+        }
+
+        label {
+            font-size: 14px;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        input[type="text"], textarea {
+            width: 95%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            background: #292929;
+            color: #fff;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #00ffff;
+            color: #121212;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #00cccc;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .button-group button {
+            flex: 1;
+        }
+
+        .condition-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .condition-group input[type="text"] {
+            flex: 4;
+        }
+
+        .remove-btn {
+            flex: 1;
+            background-color: #ff3333;
+            color: #fff;
+            cursor: pointer;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+
+        textarea {
+            height: 100px;
+            resize: none;
+        }
+
+        #conditions-container {
+            margin-top: 10px;
+        }
+
+        h3 {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #00ffff;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            input[type="text"], textarea, button {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>STATIC ADDER</h1>
+        
+        <label for="prefix">Prefix (e.g., {% static '):</label>
+        <input type="text" id="prefix" value="{% static '" placeholder="Enter static prefix">
+        
+        <label for="suffix">Suffix (optional, e.g., ' %}):</label>
+        <input type="text" id="suffix" value="' %}" placeholder="Enter static suffix">
+
+        <label>ENTER THE FOLDER NAME</label>
+        <div id="conditions-container">
+            <div class="condition-group">
+                <input type="text" placeholder="File name pattern (e.g., js/, css/)" value="css/">
+                <button class="remove-btn" onclick="removeCondition(this)">Remove</button>
+            </div>
+            <div class="condition-group">
+                <input type="text" placeholder="File name pattern (e.g., js/, css/)" value="">
+                <button class="remove-btn" onclick="removeCondition(this)">Remove</button>
+            </div>
+        </div>
+
+        <button onclick="addCondition()">+ Add Pattern</button>
+
+        <textarea id="input-links" placeholder="Paste HTML content here"></textarea>
+
+        <div class="button-group">
+            <button onclick="addStaticPrefix()">RUN</button>
+            <button onclick="copyOutput()">COPY</button>
+        </div>
+        
+        <h3>Output</h3>
+        <textarea id="output-links" readonly></textarea>
+    </div>
+
+    <script>
+        // Function to add a new condition input for file names
+        function addCondition() {
+            const container = document.getElementById('conditions-container');
+            const conditionGroup = document.createElement('div');
+            conditionGroup.classList.add('condition-group');
+            
+            const input = document.createElement('input' );
+            input.type = 'text';
+            input.placeholder = 'File name pattern (e.g., js/, css/)';
+            conditionGroup.appendChild(input);
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.textContent = 'Remove';
+            removeBtn.classList.add('remove-btn');
+            removeBtn.onclick = () => container.removeChild(conditionGroup);
+            conditionGroup.appendChild(removeBtn);
+
+            container.appendChild(conditionGroup);
+        }
+
+        // Function to remove a condition group
+        function removeCondition(button) {
+            const container = document.getElementById('conditions-container');
+            container.removeChild(button.parentElement);
+        }
+
+        // Function to add the static prefix based on the input conditions
+        function addStaticPrefix() {
+            const prefix = document.getElementById("prefix").value;
+            const suffix = document.getElementById("suffix").value;
+            const inputText = document.getElementById("input-links").value;
+
+            // Collect all conditions from the input fields
+            const conditions = [...document.querySelectorAll('#conditions-container input[type="text"]')]
+                .map(input => input.value.trim())
+                .filter(condition => condition !== '');
+
+            let outputText = inputText;
+
+            // Check if conditions are specified
+            if (conditions.length > 0) {
+                conditions.forEach(condition => {
+                    const regex = new RegExp(`(src|href)="(${condition}[^"]+)"`, 'g');
+                    outputText = outputText.replace(regex, `$1="${prefix}$2${suffix}"`);
+                });
+            }
+
+            document.getElementById("output-links").value = outputText;
+        }
+
+        // Function to copy the output to the clipboard
+        function copyOutput() {
+            const outputTextarea = document.getElementById("output-links");
+            outputTextarea.select();
+            outputTextarea.setSelectionRange(0, 99999); // For mobile devices
+
+            document.execCommand("copy");
+
+            alert("Output copied to clipboard!");
+        }
+    </script>
+</body>
+</html>
